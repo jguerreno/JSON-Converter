@@ -1,16 +1,34 @@
 package generator
 
+import (
+	"fmt"
+	"strings"
+	"text/template"
+
+	"github.com/jguerreno/JSON-Converter/internal/models"
+)
+
 type TypeScriptGenerator struct{}
 
 func NewTypeScriptGenerator() *TypeScriptGenerator {
 	return &TypeScriptGenerator{}
 }
 
-func (t *TypeScriptGenerator) GetTemplate() string {
-	return typescriptTemplate
+func (t *TypeScriptGenerator) Generate(classes []models.ClassDefinition) (string, error) {
+	tmpl := template.New("typescript").Funcs(t.getTemplateFuncs())
+	tmpl.Parse(typescriptTemplate)
+
+	var buf strings.Builder
+	if err := tmpl.Execute(&buf, map[string]interface{}{
+		"Classes": classes,
+	}); err != nil {
+		return "", fmt.Errorf("failed to execute template for %s: %w", t.GetName(), err)
+	}
+
+	return buf.String(), nil
 }
 
-func (t *TypeScriptGenerator) ConvertType(goType string) string {
+func (t *TypeScriptGenerator) convertType(goType string) string {
 	switch goType {
 	case "string":
 		return "string"
@@ -33,11 +51,26 @@ func (t *TypeScriptGenerator) GetFileExtension() string {
 	return "ts"
 }
 
+func (t *TypeScriptGenerator) getTemplateFuncs() template.FuncMap {
+	return template.FuncMap{
+		"convertType": t.formatType,
+	}
+}
+
+func (t *TypeScriptGenerator) formatType(field models.FieldDefinition) string {
+	typeBuilder := strings.Builder{}
+	typeBuilder.WriteString(t.convertType(field.TypeName))
+	if field.IsList {
+		typeBuilder.WriteString("[]")
+	}
+	return typeBuilder.String()
+}
+
 var typescriptTemplate = `
 {{ range .Classes }}
-export interface {{.Name}} {
+export class {{.Name}} {
 {{- range .Fields }}
-  {{.JSONTag}}{{if .IsOptional}}?{{end}}: {{if .IsList}}{{.TypeName}}[]{{else}}{{.TypeName}}{{end}};
+  {{.JSONTag}}{{if .IsOptional}}?{{end}}: {{ convertType .}};
 {{- end }}
 }
 {{ end }}`

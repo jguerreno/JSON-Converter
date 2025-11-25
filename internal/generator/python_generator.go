@@ -1,16 +1,20 @@
 package generator
 
+import (
+	"fmt"
+	"strings"
+	"text/template"
+
+	"github.com/jguerreno/JSON-Converter/internal/models"
+)
+
 type PythonGenerator struct{}
 
 func NewPythonGenerator() *PythonGenerator {
 	return &PythonGenerator{}
 }
 
-func (p *PythonGenerator) GetTemplate() string {
-	return pythonTemplate
-}
-
-func (p *PythonGenerator) ConvertType(goType string) string {
+func (p *PythonGenerator) convertType(goType string) string {
 	switch goType {
 	case "string":
 		return "str"
@@ -35,6 +39,44 @@ func (p *PythonGenerator) GetFileExtension() string {
 	return "py"
 }
 
+func (p *PythonGenerator) Generate(classes []models.ClassDefinition) (string, error) {
+	tmpl := template.New("python").Funcs(p.getTemplateFuncs())
+	tmpl.Parse(pythonTemplate)
+
+	var buf strings.Builder
+	if err := tmpl.Execute(&buf, map[string]interface{}{
+		"Classes": classes,
+	}); err != nil {
+		return "", fmt.Errorf("failed to execute template for %s: %w", p.GetName(), err)
+	}
+
+	return buf.String(), nil
+}
+
+func (p *PythonGenerator) getTemplateFuncs() template.FuncMap {
+	return template.FuncMap{
+		"formatType": p.formatType,
+	}
+}
+
+func (p *PythonGenerator) formatType(field models.FieldDefinition) string {
+	typeBuilder := strings.Builder{}
+	if field.IsOptional {
+		typeBuilder.WriteString("Optional[")
+	}
+	if field.IsList {
+		typeBuilder.WriteString("list[")
+	}
+	typeBuilder.WriteString(p.convertType(field.TypeName))
+	if field.IsList {
+		typeBuilder.WriteString("]")
+	}
+	if field.IsOptional {
+		typeBuilder.WriteString("]")
+	}
+	return typeBuilder.String()
+}
+
 var pythonTemplate = `
 from dataclasses import dataclass
 from typing import Optional
@@ -43,6 +85,6 @@ from typing import Optional
 @dataclass
 class {{.Name}}:
 {{- range .Fields }}
-    {{.JSONTag}}: {{if .IsOptional}}Optional[{{end}}{{if .IsList}}list[{{end}}{{.TypeName}}{{if .IsList}}]{{end}}{{if .IsOptional}}]{{end}}{{if .IsOptional}} = None{{end}}
+    {{.JSONTag}}: {{formatType .}}{{if .IsOptional}} = None{{end}}
 {{- end }}
 {{ end }}`
