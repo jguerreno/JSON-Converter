@@ -45,7 +45,12 @@ func parseCLIFlags(args []string, stderr io.Writer) *CLIConfig {
 		fmt.Fprintf(stderr, "  %s -i input.json -l go -p models -r User\n", args[0])
 	}
 
-	fs.Parse(args[1:])
+	if err := fs.Parse(args[1:]); err != nil {
+		if err == flag.ErrHelp {
+			os.Exit(0)
+		}
+		os.Exit(1)
+	}
 	return config
 }
 
