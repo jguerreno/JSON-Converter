@@ -8,10 +8,14 @@ import (
 	"github.com/jguerreno/JSON-Converter/internal/models"
 )
 
-type GoGenerator struct{}
+type GoGenerator struct {
+	template *template.Template
+}
 
 func NewGoGenerator() *GoGenerator {
-	return &GoGenerator{}
+	return &GoGenerator{
+		template: template.Must(template.New("go").Funcs(getGoTemplateFuncs()).Parse(goTemplate)),
+	}
 }
 
 func (g *GoGenerator) GetName() string {
@@ -23,14 +27,8 @@ func (g *GoGenerator) GetFileExtension() string {
 }
 
 func (g *GoGenerator) Generate(classes []models.ClassDefinition) (string, error) {
-	tmpl := template.New("go").Funcs(g.getTemplateFuncs())
-	tmpl, err := tmpl.Parse(goTemplate)
-	if err != nil {
-		return "", fmt.Errorf("failed to parse template: %w", err)
-	}
-
 	var buf strings.Builder
-	if err := tmpl.Execute(&buf, map[string]interface{}{
+	if err := g.template.Execute(&buf, map[string]interface{}{
 		"Classes": classes,
 	}); err != nil {
 		return "", fmt.Errorf("failed to execute template for %s: %w", g.GetName(), err)
@@ -39,18 +37,18 @@ func (g *GoGenerator) Generate(classes []models.ClassDefinition) (string, error)
 	return buf.String(), nil
 }
 
-func (g *GoGenerator) convertType(goType string) string {
+func convertGoType(goType string) string {
 	return goType
 }
 
-func (g *GoGenerator) getTemplateFuncs() template.FuncMap {
+func getGoTemplateFuncs() template.FuncMap {
 	return template.FuncMap{
-		"formatType":    g.formatType,
-		"formatJsonTag": g.formatJsonTag,
+		"formatType":    formatGoType,
+		"formatJsonTag": formatGoJsonTag,
 	}
 }
 
-func (g *GoGenerator) formatType(field models.FieldDefinition) string {
+func formatGoType(field models.FieldDefinition) string {
 	typeBuilder := strings.Builder{}
 	if field.IsList {
 		typeBuilder.WriteString("[]")
@@ -58,11 +56,11 @@ func (g *GoGenerator) formatType(field models.FieldDefinition) string {
 	if field.IsOptional {
 		typeBuilder.WriteString("*")
 	}
-	typeBuilder.WriteString(g.convertType(field.TypeName))
+	typeBuilder.WriteString(convertGoType(field.TypeName))
 	return typeBuilder.String()
 }
 
-func (g *GoGenerator) formatJsonTag(field models.FieldDefinition) string {
+func formatGoJsonTag(field models.FieldDefinition) string {
 	var tagBuilder strings.Builder
 	tagBuilder.WriteString(field.JSONTag)
 	if field.IsOptional {

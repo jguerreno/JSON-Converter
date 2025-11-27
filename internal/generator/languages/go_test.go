@@ -22,16 +22,14 @@ func TestConvertGoType(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		result := NewGoGenerator().formatType(models.FieldDefinition{TypeName: tt.value})
+		result := convertGoType(tt.value)
 		if result != tt.want {
-			t.Errorf("formatType(%q) = %q, want %q", tt.value, result, tt.want)
+			t.Errorf("convertGoType(%q) = %q, want %q", tt.value, result, tt.want)
 		}
 	}
 }
 
 func TestGoFormatType(t *testing.T) {
-	generator := NewGoGenerator()
-
 	tests := []struct {
 		field models.FieldDefinition
 		want  string
@@ -67,7 +65,7 @@ func TestGoFormatType(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		result := generator.formatType(tt.field)
+		result := formatGoType(tt.field)
 		if result != tt.want {
 			t.Errorf("formatType(%v) = %q, want %q", tt.field, result, tt.want)
 		}
@@ -75,8 +73,6 @@ func TestGoFormatType(t *testing.T) {
 }
 
 func TestGoFormatJsonTag(t *testing.T) {
-	generator := NewGoGenerator()
-
 	tests := []struct {
 		field models.FieldDefinition
 		want  string
@@ -97,7 +93,7 @@ func TestGoFormatJsonTag(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		result := generator.formatJsonTag(tt.field)
+		result := formatGoJsonTag(tt.field)
 		if result != tt.want {
 			t.Errorf("formatJsonTag(%v) = %q, want %q", tt.field, result, tt.want)
 		}

@@ -20,10 +20,9 @@ func TestConvertTypescriptType(t *testing.T) {
 		{"MiClase", "MiClase"},
 		{"interface{}", "any"},
 	}
-	typescriptGenerator := NewTypeScriptGenerator()
 
 	for _, tt := range tests {
-		result := typescriptGenerator.convertType(tt.value)
+		result := convertTypeScriptType(tt.value)
 		if result != tt.typescriptType {
 			t.Errorf("convertType(%q) = %q, want %q", tt.value, result, tt.typescriptType)
 		}
@@ -31,8 +30,6 @@ func TestConvertTypescriptType(t *testing.T) {
 }
 
 func TestTypescriptFormatType(t *testing.T) {
-	generator := NewTypeScriptGenerator()
-
 	tests := []struct {
 		field models.FieldDefinition
 		want  string
@@ -53,7 +50,7 @@ func TestTypescriptFormatType(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		result := generator.formatType(tt.field)
+		result := formatTypeScriptType(tt.field)
 		if result != tt.want {
 			t.Errorf("formatType(%v) = %q, want %q", tt.field, result, tt.want)
 		}

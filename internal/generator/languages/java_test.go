@@ -20,10 +20,9 @@ func TestConvertJavaType(t *testing.T) {
 		{"MiClase", "MiClase"},
 		{"interface{}", "Object"},
 	}
-	javaGenerator := NewJavaGenerator()
 
 	for _, tt := range tests {
-		result := javaGenerator.convertType(tt.value)
+		result := convertJavaType(tt.value)
 		if result != tt.javaType {
 			t.Errorf("convertType(%q) = %q, want %q", tt.value, result, tt.javaType)
 		}
@@ -31,8 +30,6 @@ func TestConvertJavaType(t *testing.T) {
 }
 
 func TestJavaFormatType(t *testing.T) {
-	generator := NewJavaGenerator()
-
 	tests := []struct {
 		field models.FieldDefinition
 		want  string
@@ -68,7 +65,7 @@ func TestJavaFormatType(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		result := generator.formatType(tt.field)
+		result := formatJavaType(tt.field)
 		if result != tt.want {
 			t.Errorf("formatType(%v) = %q, want %q", tt.field, result, tt.want)
 		}
@@ -128,5 +125,4 @@ func TestGenerateJava(t *testing.T) {
 			t.Errorf("Generated Java code missing: %q", expected)
 		}
 	}
-
 }

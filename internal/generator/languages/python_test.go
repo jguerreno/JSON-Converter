@@ -20,19 +20,16 @@ func TestConvertPythonType(t *testing.T) {
 		{"MiClase", "MiClase"},
 		{"interface{}", "Any"},
 	}
-	pythonGenerator := NewPythonGenerator()
 
 	for _, tt := range tests {
-		result := pythonGenerator.convertType(tt.value)
+		result := convertPythonType(tt.value)
 		if result != tt.pythonType {
-			t.Errorf("convertType(%q) = %q, want %q", tt.value, result, tt.pythonType)
+			t.Errorf("convertPythonType(%q) = %q, want %q", tt.value, result, tt.pythonType)
 		}
 	}
 }
 
 func TestPythonFormatType(t *testing.T) {
-	generator := NewPythonGenerator()
-
 	tests := []struct {
 		field models.FieldDefinition
 		want  string
@@ -68,9 +65,9 @@ func TestPythonFormatType(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		result := generator.formatType(tt.field)
+		result := formatPythonType(tt.field)
 		if result != tt.want {
-			t.Errorf("formatType(%v) = %q, want %q", tt.field, result, tt.want)
+			t.Errorf("formatPythonType(%v) = %q, want %q", tt.field, result, tt.want)
 		}
 	}
 }

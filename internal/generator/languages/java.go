@@ -8,13 +8,36 @@ import (
 	"github.com/jguerreno/JSON-Converter/internal/models"
 )
 
-type JavaGenerator struct{}
-
-func NewJavaGenerator() *JavaGenerator {
-	return &JavaGenerator{}
+type JavaGenerator struct {
+	template *template.Template
 }
 
-func (j *JavaGenerator) convertType(goType string) string {
+func NewJavaGenerator() *JavaGenerator {
+	return &JavaGenerator{
+		template: template.Must(template.New("java").Funcs(getJavaTemplateFuncs()).Parse(javaTemplate)),
+	}
+}
+
+func (j *JavaGenerator) Generate(classes []models.ClassDefinition) (string, error) {
+	var buf strings.Builder
+	if err := j.template.Execute(&buf, map[string]interface{}{
+		"Classes": classes,
+	}); err != nil {
+		return "", fmt.Errorf("failed to execute template for %s: %w", j.GetName(), err)
+	}
+
+	return buf.String(), nil
+}
+
+func (j *JavaGenerator) GetName() string {
+	return "java"
+}
+
+func (j *JavaGenerator) GetFileExtension() string {
+	return "java"
+}
+
+func convertJavaType(goType string) string {
 	switch goType {
 	case "string":
 		return "String"
@@ -33,38 +56,16 @@ func (j *JavaGenerator) convertType(goType string) string {
 	}
 }
 
-func (j *JavaGenerator) Generate(classes []models.ClassDefinition) (string, error) {
-	tmpl := template.New("java").Funcs(j.getTemplateFuncs())
-	tmpl.Parse(javaTemplate)
-
-	var buf strings.Builder
-	if err := tmpl.Execute(&buf, map[string]interface{}{
-		"Classes": classes,
-	}); err != nil {
-		return "", fmt.Errorf("failed to execute template for %s: %w", j.GetName(), err)
-	}
-
-	return buf.String(), nil
-}
-
-func (j *JavaGenerator) GetName() string {
-	return "java"
-}
-
-func (j *JavaGenerator) GetFileExtension() string {
-	return "java"
-}
-
-func (j *JavaGenerator) getTemplateFuncs() template.FuncMap {
+func getJavaTemplateFuncs() template.FuncMap {
 	return template.FuncMap{
-		"convertType": j.formatType,
+		"convertType": formatJavaType,
 		"jsonTag": func(field models.FieldDefinition) string {
 			return field.JSONTag
 		},
 	}
 }
 
-func (j *JavaGenerator) formatType(field models.FieldDefinition) string {
+func formatJavaType(field models.FieldDefinition) string {
 	typeBuilder := strings.Builder{}
 	if field.IsOptional {
 		typeBuilder.WriteString("Optional<")
@@ -72,7 +73,7 @@ func (j *JavaGenerator) formatType(field models.FieldDefinition) string {
 	if field.IsList {
 		typeBuilder.WriteString("List<")
 	}
-	typeBuilder.WriteString(j.convertType(field.TypeName))
+	typeBuilder.WriteString(convertJavaType(field.TypeName))
 	if field.IsList {
 		typeBuilder.WriteString(">")
 	}

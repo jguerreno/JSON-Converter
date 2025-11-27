@@ -8,18 +8,19 @@ import (
 	"github.com/jguerreno/JSON-Converter/internal/models"
 )
 
-type TypeScriptGenerator struct{}
+type TypeScriptGenerator struct {
+	template *template.Template
+}
 
 func NewTypeScriptGenerator() *TypeScriptGenerator {
-	return &TypeScriptGenerator{}
+	return &TypeScriptGenerator{
+		template: template.Must(template.New("typescript").Funcs(getTemplateFuncs()).Parse(typescriptTemplate)),
+	}
 }
 
 func (t *TypeScriptGenerator) Generate(classes []models.ClassDefinition) (string, error) {
-	tmpl := template.New("typescript").Funcs(t.getTemplateFuncs())
-	tmpl.Parse(typescriptTemplate)
-
 	var buf strings.Builder
-	if err := tmpl.Execute(&buf, map[string]interface{}{
+	if err := t.template.Execute(&buf, map[string]interface{}{
 		"Classes": classes,
 	}); err != nil {
 		return "", fmt.Errorf("failed to execute template for %s: %w", t.GetName(), err)
@@ -28,7 +29,15 @@ func (t *TypeScriptGenerator) Generate(classes []models.ClassDefinition) (string
 	return buf.String(), nil
 }
 
-func (t *TypeScriptGenerator) convertType(goType string) string {
+func (t *TypeScriptGenerator) GetName() string {
+	return "typescript"
+}
+
+func (t *TypeScriptGenerator) GetFileExtension() string {
+	return "ts"
+}
+
+func convertTypeScriptType(goType string) string {
 	switch goType {
 	case "string":
 		return "string"
@@ -43,23 +52,15 @@ func (t *TypeScriptGenerator) convertType(goType string) string {
 	}
 }
 
-func (t *TypeScriptGenerator) GetName() string {
-	return "typescript"
-}
-
-func (t *TypeScriptGenerator) GetFileExtension() string {
-	return "ts"
-}
-
-func (t *TypeScriptGenerator) getTemplateFuncs() template.FuncMap {
+func getTemplateFuncs() template.FuncMap {
 	return template.FuncMap{
-		"convertType": t.formatType,
+		"convertType": formatTypeScriptType,
 	}
 }
 
-func (t *TypeScriptGenerator) formatType(field models.FieldDefinition) string {
+func formatTypeScriptType(field models.FieldDefinition) string {
 	typeBuilder := strings.Builder{}
-	typeBuilder.WriteString(t.convertType(field.TypeName))
+	typeBuilder.WriteString(convertTypeScriptType(field.TypeName))
 	if field.IsList {
 		typeBuilder.WriteString("[]")
 	}

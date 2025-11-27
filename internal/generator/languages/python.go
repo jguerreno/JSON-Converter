@@ -8,13 +8,36 @@ import (
 	"github.com/jguerreno/JSON-Converter/internal/models"
 )
 
-type PythonGenerator struct{}
-
-func NewPythonGenerator() *PythonGenerator {
-	return &PythonGenerator{}
+type PythonGenerator struct {
+	template *template.Template
 }
 
-func (p *PythonGenerator) convertType(goType string) string {
+func NewPythonGenerator() *PythonGenerator {
+	return &PythonGenerator{
+		template: template.Must(template.New("python").Funcs(getPythonTemplateFuncs()).Parse(pythonTemplate)),
+	}
+}
+
+func (p *PythonGenerator) GetName() string {
+	return "python"
+}
+
+func (p *PythonGenerator) GetFileExtension() string {
+	return "py"
+}
+
+func (p *PythonGenerator) Generate(classes []models.ClassDefinition) (string, error) {
+	var buf strings.Builder
+	if err := p.template.Execute(&buf, map[string]interface{}{
+		"Classes": classes,
+	}); err != nil {
+		return "", fmt.Errorf("failed to execute template for %s: %w", p.GetName(), err)
+	}
+
+	return buf.String(), nil
+}
+
+func convertPythonType(goType string) string {
 	switch goType {
 	case "string":
 		return "str"
@@ -31,35 +54,13 @@ func (p *PythonGenerator) convertType(goType string) string {
 	}
 }
 
-func (p *PythonGenerator) GetName() string {
-	return "python"
-}
-
-func (p *PythonGenerator) GetFileExtension() string {
-	return "py"
-}
-
-func (p *PythonGenerator) Generate(classes []models.ClassDefinition) (string, error) {
-	tmpl := template.New("python").Funcs(p.getTemplateFuncs())
-	tmpl.Parse(pythonTemplate)
-
-	var buf strings.Builder
-	if err := tmpl.Execute(&buf, map[string]interface{}{
-		"Classes": classes,
-	}); err != nil {
-		return "", fmt.Errorf("failed to execute template for %s: %w", p.GetName(), err)
-	}
-
-	return buf.String(), nil
-}
-
-func (p *PythonGenerator) getTemplateFuncs() template.FuncMap {
+func getPythonTemplateFuncs() template.FuncMap {
 	return template.FuncMap{
-		"formatType": p.formatType,
+		"formatType": formatPythonType,
 	}
 }
 
-func (p *PythonGenerator) formatType(field models.FieldDefinition) string {
+func formatPythonType(field models.FieldDefinition) string {
 	typeBuilder := strings.Builder{}
 	if field.IsOptional {
 		typeBuilder.WriteString("Optional[")
@@ -67,7 +68,7 @@ func (p *PythonGenerator) formatType(field models.FieldDefinition) string {
 	if field.IsList {
 		typeBuilder.WriteString("list[")
 	}
-	typeBuilder.WriteString(p.convertType(field.TypeName))
+	typeBuilder.WriteString(convertPythonType(field.TypeName))
 	if field.IsList {
 		typeBuilder.WriteString("]")
 	}
