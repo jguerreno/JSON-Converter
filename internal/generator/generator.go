@@ -60,3 +60,14 @@ func (r *GeneratorRegistry) GetSupportedLanguages() []string {
 	}
 	return languages
 }
+
+func (r *GeneratorRegistry) GetLanguage(language string) (LanguageGenerator, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	gen, ok := r.generators[language]
+	if !ok {
+		return nil, fmt.Errorf("language '%s' not supported", language)
+	}
+
+	return gen, nil
+}
