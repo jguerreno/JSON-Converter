@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/jguerreno/JSON-Converter/internal/generator"
-	"github.com/jguerreno/JSON-Converter/internal/parser"
 )
 
 type CLIConfig struct {
@@ -72,13 +71,8 @@ func runCLI(args []string, stdin io.Reader, stdout, stderr io.Writer) error {
 		}
 	}
 
-	classes, err := parser.ParseJSON(jsonData, config.RootName)
-	if err != nil {
-		return fmt.Errorf("error parsing JSON: %w", err)
-	}
-
-	registry := generator.NewGeneratorRegistry()
-	output, err := registry.Generate(config.Language, classes)
+	service := generator.NewGeneratorService()
+	output, err := service.GenerateFromJSON(jsonData, config.RootName, config.Language)
 	if err != nil {
 		return err
 	}
