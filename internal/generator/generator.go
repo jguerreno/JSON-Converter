@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/jguerreno/JSON-Converter/internal/generator/languages"
 	"github.com/jguerreno/JSON-Converter/internal/models"
 )
 
@@ -23,10 +24,10 @@ func NewGeneratorRegistry() *GeneratorRegistry {
 		generators: make(map[string]LanguageGenerator),
 	}
 
-	registry.Register(NewGoGenerator())
-	registry.Register(NewPythonGenerator())
-	registry.Register(NewTypeScriptGenerator())
-	registry.Register(NewJavaGenerator())
+	registry.Register(languages.NewGoGenerator())
+	registry.Register(languages.NewPythonGenerator())
+	registry.Register(languages.NewTypeScriptGenerator())
+	registry.Register(languages.NewJavaGenerator())
 
 	return registry
 }
