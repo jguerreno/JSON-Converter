@@ -254,11 +254,11 @@ func TestRunCLI_TypeScriptGeneration(t *testing.T) {
 	}
 
 	output := stdout.String()
-	if !strings.Contains(output, "class User") {
-		t.Error("expected User class")
+	if !strings.Contains(output, "interface User") {
+		t.Error("expected User interface")
 	}
-	if !strings.Contains(output, "class Profile") {
-		t.Error("expected Profile class")
+	if !strings.Contains(output, "interface Profile") {
+		t.Error("expected Profile interface")
 	}
 }
 
@@ -305,7 +305,7 @@ func TestRunCLI_CustomRootName(t *testing.T) {
 	}{
 		{"go", "type CustomRoot struct"},
 		{"python", "class CustomRoot:"},
-		{"typescript", "class CustomRoot"},
+		{"typescript", "interface CustomRoot"},
 		{"java", "class CustomRoot"},
 	}
 

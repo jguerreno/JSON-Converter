@@ -84,14 +84,14 @@ func TestGenerateTypescript(t *testing.T) {
 	}
 
 	expectedCode := []string{
-		`export class User {`,
+		`export interface User {`,
 		`name: string`,
 		`age: number`,
 		`email?: string`,
 		`tags: string[]`,
 		`city: City`,
 		`}`,
-		`export class City {`,
+		`export interface City {`,
 		`name: string`,
 		`population: number`,
 		`}`,

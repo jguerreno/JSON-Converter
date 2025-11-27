@@ -69,7 +69,7 @@ func formatTypeScriptType(field models.FieldDefinition) string {
 
 var typescriptTemplate = `
 {{ range .Classes }}
-export class {{.Name}} {
+export interface {{.Name}} {
 {{- range .Fields }}
   {{.JSONTag}}{{if .IsOptional}}?{{end}}: {{ convertType .}};
 {{- end }}
