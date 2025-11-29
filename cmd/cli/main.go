@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -16,7 +17,7 @@ type CLIConfig struct {
 	RootName   string
 }
 
-func parseCLIFlags(args []string, stderr io.Writer) *CLIConfig {
+func parseCLIFlags(args []string, stderr io.Writer) (*CLIConfig, error) {
 	config := &CLIConfig{}
 
 	fs := flag.NewFlagSet(args[0], flag.ContinueOnError)
@@ -45,19 +46,21 @@ func parseCLIFlags(args []string, stderr io.Writer) *CLIConfig {
 	}
 
 	if err := fs.Parse(args[1:]); err != nil {
-		if err == flag.ErrHelp {
-			os.Exit(0)
+		if errors.Is(err, flag.ErrHelp) {
+			return nil, nil
 		}
-		os.Exit(1)
+		return nil, fmt.Errorf("failed to parse flags: %w", err)
 	}
-	return config
+	return config, nil
 }
 
 func runCLI(args []string, stdin io.Reader, stdout, stderr io.Writer) error {
-	config := parseCLIFlags(args, stderr)
+	config, err := parseCLIFlags(args, stderr)
+	if err != nil {
+		return err
+	}
 
 	var jsonData []byte
-	var err error
 
 	if config.InputFile != "" {
 		jsonData, err = os.ReadFile(config.InputFile)

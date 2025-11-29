@@ -26,7 +26,10 @@ func TestParseCLIFlags_AllFlags(t *testing.T) {
 	args := []string{"cmd", "-input", "input.json", "-output", "output.go", "-lang", "python", "-root", "User"}
 	stderr := &bytes.Buffer{}
 
-	config := parseCLIFlags(args, stderr)
+	config, err := parseCLIFlags(args, stderr)
+	if err != nil {
+		t.Fatalf("parseCLIFlags failed: %v", err)
+	}
 
 	if config.InputFile != "input.json" {
 		t.Errorf("expected InputFile=input.json, got %s", config.InputFile)
@@ -46,7 +49,11 @@ func TestParseCLIFlags_Defaults(t *testing.T) {
 	args := []string{"cmd"}
 	stderr := &bytes.Buffer{}
 
-	config := parseCLIFlags(args, stderr)
+	config, err := parseCLIFlags(args, stderr)
+	if err != nil {
+		t.Fatalf("parseCLIFlags failed: %v", err)
+	}
+
 	if config.Language != "go" {
 		t.Errorf("expected default Language=go, got %s", config.Language)
 	}
@@ -59,7 +66,10 @@ func TestParseCLIFlags_Shorthand(t *testing.T) {
 	args := []string{"cmd", "-i", "in.json", "-o", "out.py", "-l", "typescript", "-r", "MyClass"}
 	stderr := &bytes.Buffer{}
 
-	config := parseCLIFlags(args, stderr)
+	config, err := parseCLIFlags(args, stderr)
+	if err != nil {
+		t.Fatalf("parseCLIFlags failed: %v", err)
+	}
 
 	if config.InputFile != "in.json" {
 		t.Errorf("expected InputFile=in.json, got %s", config.InputFile)
